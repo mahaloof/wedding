@@ -25,6 +25,8 @@ const musicMood = $("musicMood");
 const musicToggle = $("musicToggle");
 const publishButton = $("publishButton");
 const publishStatus = $("publishStatus");
+const publishDialog = $("publishDialog");
+const showShareLink = $("showShareLink");
 
 function titleDate(value) {
   if (!value) return "Your special date";
@@ -261,6 +263,7 @@ async function publishInvitation() {
     publishStatus.append(link);
     await navigator.clipboard?.writeText(shareUrl);
     publishStatus.append(" — copied to your clipboard.");
+    publishDialog.showModal();
   } catch (error) {
     publishStatus.textContent = error.message.includes("Failed to fetch")
       ? "Publishing is ready after deployment. Add the Supabase settings in Vercel, then publish again."
@@ -270,6 +273,11 @@ async function publishInvitation() {
     publishButton.textContent = "Publish & share";
   }
 }
+
+showShareLink.addEventListener("click", () => {
+  publishDialog.close();
+  publishStatus.scrollIntoView({ behavior: "smooth", block: "center" });
+});
 
 function setFieldValues(data) {
   const values = {
