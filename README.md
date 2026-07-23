@@ -22,6 +22,8 @@ The app now includes a **Publish & share** action. It saves the generated invita
 
 The project uses a Vercel serverless endpoint and Supabase for this feature. The source contains no secret keys.
 
+Vercel is configured explicitly as a static HTML/CSS/JavaScript project in `vercel.json`. This matters because the project also has a `public/` assets folder: without the explicit root output directory, Vercel can mistakenly look for the site inside that folder instead of serving `index.html` from the repository root.
+
 ### One-time setup
 
 1. Create a [Supabase](https://supabase.com) project and open its SQL Editor.
