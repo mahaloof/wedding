@@ -25,6 +25,7 @@ const musicMood = $("musicMood");
 const customMusicUpload = $("customMusicUpload");
 const musicToggle = $("musicToggle");
 const publishButton = $("publishButton");
+const publishPrice = $("publishPrice");
 const publishStatus = $("publishStatus");
 const publishDialog = $("publishDialog");
 const showShareLink = $("showShareLink");
@@ -294,36 +295,107 @@ async function currentInvitationData() {
   };
 }
 
+function setPublishButton(isBusy, label = "Publish & share") {
+  publishButton.disabled = isBusy;
+  publishButton.textContent = label;
+}
+
+async function showPublishedLink(slug) {
+  const shareUrl = `${window.location.origin}/invite/${slug}`;
+  publishStatus.replaceChildren("Your invitation is live: ");
+  const link = document.createElement("a");
+  link.href = shareUrl;
+  link.textContent = shareUrl;
+  link.target = "_blank";
+  link.rel = "noreferrer";
+  publishStatus.append(link);
+  await navigator.clipboard?.writeText(shareUrl);
+  publishStatus.append(" — copied to your clipboard.");
+  publishDialog.showModal();
+}
+
+async function directAdminPublish(invitation) {
+  const response = await fetch("/api/invitations", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify(invitation),
+  });
+  const result = await response.json();
+  if (!response.ok) throw new Error(result.error || "Unable to publish this invitation.");
+  await showPublishedLink(result.slug);
+}
+
+async function verifyPaymentAndPublish(payment, invitation) {
+  publishStatus.textContent = "Verifying your payment and publishing your invitation…";
+  setPublishButton(true, "Verifying payment…");
+  const response = await fetch("/api/payments/verify-and-publish", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify({ ...payment, invitation }),
+  });
+  const result = await response.json();
+  if (!response.ok) throw new Error(result.error || "Payment verification failed. Your invitation remains a draft.");
+  await showPublishedLink(result.slug);
+}
+
 async function publishInvitation() {
-  publishButton.disabled = true;
-  publishButton.textContent = "Publishing…";
-  publishStatus.textContent = "Saving your invitation and preparing a public link…";
+  let checkoutOpened = false;
+  let paymentReceived = false;
+  setPublishButton(true, "Preparing payment…");
+  publishStatus.textContent = "Early-user price: ₹10. Your invitation will be published only after secure payment verification.";
   try {
-    const response = await fetch("/api/invitations", {
+    const invitation = await currentInvitationData();
+    const response = await fetch("/api/payments/create-order", {
       method: "POST",
-      headers: { "Content-Type": "application/json", ...authHeaders() },
-      body: JSON.stringify(await currentInvitationData()),
+      headers: { ...authHeaders() },
     });
     const result = await response.json();
-    if (!response.ok) throw new Error(result.error || "Unable to publish this invitation.");
-    const shareUrl = `${window.location.origin}/invite/${result.slug}`;
-    publishStatus.replaceChildren("Your invitation is live: ");
-    const link = document.createElement("a");
-    link.href = shareUrl;
-    link.textContent = shareUrl;
-    link.target = "_blank";
-    link.rel = "noreferrer";
-    publishStatus.append(link);
-    await navigator.clipboard?.writeText(shareUrl);
-    publishStatus.append(" — copied to your clipboard.");
-    publishDialog.showModal();
+    if (!response.ok) throw new Error(result.error || "Unable to prepare payment.");
+    if (result.isAdmin) {
+      publishStatus.textContent = "Admin publishing enabled — no payment required.";
+      await directAdminPublish(invitation);
+      return;
+    }
+    if (!window.Razorpay) throw new Error("Razorpay could not load. Please check your connection and try again.");
+    const checkout = new window.Razorpay({
+      key: result.keyId,
+      amount: result.amount,
+      currency: result.currency,
+      name: "Wedly",
+      description: "Early-user invitation publishing · ₹10",
+      order_id: result.orderId,
+      theme: { color: "#b87865" },
+      prefill: { email: accountEmail.textContent },
+      handler: async (payment) => {
+        paymentReceived = true;
+        try {
+          await verifyPaymentAndPublish(payment, invitation);
+        } catch (error) {
+          publishStatus.textContent = error.message;
+        } finally {
+          setPublishButton(false);
+        }
+      },
+      modal: {
+        ondismiss: () => {
+          if (paymentReceived) return;
+          publishStatus.textContent = "Payment cancelled — your invitation remains open as a draft and has not been published.";
+          setPublishButton(false);
+        },
+      },
+    });
+    checkout.on("payment.failed", () => {
+      publishStatus.textContent = "Payment failed — your invitation remains a draft and no public link was created.";
+      setPublishButton(false);
+    });
+    checkout.open();
+    checkoutOpened = true;
   } catch (error) {
     publishStatus.textContent = error.message.includes("Failed to fetch")
-      ? "Publishing is ready after deployment. Add the Supabase settings in Vercel, then publish again."
+      ? "Payment publishing is ready after deployment. Add the Supabase and Razorpay settings in Vercel, then try again."
       : error.message;
   } finally {
-    publishButton.disabled = false;
-    publishButton.textContent = "Publish & share";
+    if (!checkoutOpened && !publishButton.textContent.includes("Verifying")) setPublishButton(false);
   }
 }
 
@@ -375,6 +447,7 @@ async function enterWedly(session) {
   authGate.hidden = true;
   creatorScreen.hidden = false;
   adminPanel.hidden = !result.isAdmin;
+  publishPrice.hidden = result.isAdmin;
   if (result.isAdmin) loadAdminOverview().catch(() => { adminList.textContent = "Unable to load invitations right now."; });
 }
 
@@ -444,6 +517,7 @@ async function loadPublishedInvitation(slug) {
     invitationStage.hidden = false;
     $("editInvitation").hidden = true;
     publishButton.hidden = true;
+    publishPrice.hidden = true;
     musicToggle.hidden = musicMood.value === "off" && !customMusicUrl;
     musicToggle.textContent = "♪ Play music";
   } catch (error) {
