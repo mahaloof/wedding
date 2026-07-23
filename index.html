@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#fbf1f4" />
+    <title>Vow Atelier — Wedding invitation generator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Italianno&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <section class="creator-screen" id="creatorScreen" aria-labelledby="creatorTitle">
+      <nav class="creator-nav">
+        <a class="brand" href="#creatorTitle" aria-label="Vow Atelier home"><span class="brand-mark">V</span><span>Vow Atelier</span></a>
+        <span class="creator-nav-note">Made for your forever</span>
+      </nav>
+
+      <div class="creator-intro">
+        <p class="panel-kicker">Your wedding, your website</p>
+        <h1 id="creatorTitle">Make an invitation<br /><em>worth keeping.</em></h1>
+        <p>Choose a look, share the details, and we’ll turn your celebration into a beautiful invitation website.</p>
+      </div>
+
+      <section class="template-picker" aria-labelledby="templateTitle">
+        <div class="picker-heading"><p class="step-label">01</p><h2 id="templateTitle">Pick your invitation style</h2><span>4 templates</span></div>
+        <div class="template-grid" role="list">
+          <button class="template-card is-selected" type="button" data-template="blush" aria-pressed="true" role="listitem">
+            <span class="template-art template-art--blush"><i>the nikah of</i><b>A &amp; N</b><small>soft blush</small></span>
+            <strong>Blush Nikah</strong><small>Soft, romantic &amp; traditional</small>
+          </button>
+          <button class="template-card" type="button" data-template="classic" aria-pressed="false" role="listitem">
+            <span class="template-art template-art--classic"><i>celebrating</i><b>A &amp; R</b><small>forever</small></span>
+            <strong>Classic Vows</strong><small>Minimal, black &amp; timeless</small>
+          </button>
+          <button class="template-card" type="button" data-template="midnight" aria-pressed="false" role="listitem">
+            <span class="template-art template-art--midnight"><i>our story</i><b>M &amp; A</b><small>in navy</small></span>
+            <strong>Midnight Story</strong><small>Editorial, navy &amp; romantic</small>
+          </button>
+          <button class="template-card" type="button" data-template="botanical" aria-pressed="false" role="listitem">
+            <span class="template-art template-art--botanical"><i>in bloom</i><b>M &amp; A</b><small>floral</small></span>
+            <strong>Botanical Story</strong><small>Watercolour, floral &amp; fresh</small>
+          </button>
+        </div>
+      </section>
+
+      <section class="details-card" aria-labelledby="detailsTitle">
+        <div class="picker-heading"><p class="step-label">02</p><h2 id="detailsTitle">Tell us the details</h2><button class="demo-fill" id="demoFill" type="button">Use demo details</button></div>
+        <p class="details-help">Everything can be changed later. The invitation will appear after you create it.</p>
+
+        <form id="invitationForm">
+          <input id="selectedTemplate" type="hidden" value="blush" />
+          <fieldset>
+            <legend>Couple</legend>
+            <div class="two-columns">
+              <label>Partner one<input id="bride" name="bride" value="Mira" autocomplete="given-name" /></label>
+              <label>Partner two<input id="groom" name="groom" value="Arjun" autocomplete="given-name" /></label>
+            </div>
+            <label>Wedding hashtag<input id="hashtag" name="hashtag" value="#MiraAndArjun" /></label>
+          </fieldset>
+
+          <fieldset>
+            <legend>Main ceremony</legend>
+            <label>Date<input id="nikahDate" name="nikahDate" type="date" value="2027-02-14" /></label>
+            <div class="two-columns">
+              <label>Time<input id="nikahTimeInput" name="nikahTime" value="5:00 P.M." /></label>
+              <label>Venue<input id="nikahVenueInput" name="nikahVenue" value="Willowbrook Auditorium (Demo Venue)" /></label>
+            </div>
+            <label>Google Maps link <span class="optional">optional</span><input id="nikahMapInput" name="nikahMap" type="url" placeholder="https://maps.google.com/..." /></label>
+          </fieldset>
+
+          <fieldset>
+            <legend>Reception</legend>
+            <label>Date<input id="receptionDate" name="receptionDate" type="date" value="2027-02-15" /></label>
+            <div class="two-columns">
+              <label>Time<input id="receptionTimeInput" name="receptionTime" value="11:30 A.M. — 2:00 P.M." /></label>
+              <label>Venue<input id="receptionVenueInput" name="receptionVenue" value="Lakeside Celebration Hall (Demo Venue)" /></label>
+            </div>
+            <label>Google Maps link <span class="optional">optional</span><input id="receptionMapInput" name="receptionMap" type="url" placeholder="https://maps.google.com/..." /></label>
+          </fieldset>
+
+          <fieldset>
+            <legend>Photos</legend>
+            <label class="upload-label">Add up to 4 favourite photos<input id="photoUpload" name="photos" type="file" accept="image/*" multiple /></label>
+            <p class="field-help">Optional — they’ll appear as a curated photo story in the invitation.</p>
+          </fieldset>
+
+          <fieldset>
+            <legend>Background music</legend>
+            <label>Choose an ambient tone<select id="musicMood" name="musicMood"><option value="off">No background music</option><option value="piano">Soft piano glow</option><option value="strings">Warm strings</option><option value="bells">Dreamy bells</option></select></label>
+            <p class="field-help">Guests can pause or play it from the invitation header.</p>
+          </fieldset>
+
+          <fieldset>
+            <legend>A personal note</legend>
+            <label class="textarea-label">Blessing or welcome message<textarea id="message" name="message" rows="4">With grateful hearts and the warmth of our families, we invite you to celebrate the beginning of our beautiful forever. Your presence will make our day complete.</textarea></label>
+          </fieldset>
+
+          <button class="generate-button" type="submit"><span>✦</span> Create my invitation</button>
+          <p class="form-status" id="formStatus" aria-live="polite"></p>
+        </form>
+      </section>
+    </section>
+
+    <main class="app-shell invitation-stage" id="invitationStage" hidden aria-label="Generated invitation">
+      <section class="preview-area" aria-label="Invitation preview">
+        <div class="preview-toolbar">
+          <a class="brand" href="#top" aria-label="Vow Atelier home">
+            <span class="brand-mark">V</span>
+            <span>Vow Atelier</span>
+          </a>
+          <div class="preview-actions"><span class="preview-pill"><i></i> Invitation ready</span><button class="edit-button" id="musicToggle" type="button" hidden>♪ Play music</button><button class="edit-button publish-button" id="publishButton" type="button">Publish &amp; share</button><button class="edit-button" id="editInvitation" type="button">Edit details</button></div>
+        </div>
+
+        <article class="invitation" id="top">
+          <span class="petal p1"></span><span class="petal p2"></span><span class="petal p3"></span><span class="petal p4"></span>
+
+          <header class="hero">
+            <p class="bismillah" id="spiritualHeader">بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيم</p>
+            <p class="translation" id="spiritualTranslation">In the name of Allah, the Most Gracious, the Most Merciful</p>
+            <div class="hero-rule"></div>
+            <p class="eyebrow" id="occasionLabel">The Nikah of</p>
+            <h1><span id="previewBride">Mira</span><em>&amp;</em><span id="previewGroom">Arjun</span></h1>
+            <p class="date-line" id="previewDateLine">Sunday, 14 February 2027</p>
+
+            <div class="countdown" aria-label="Countdown to wedding day">
+              <div><strong id="days">00</strong><span>Days</span></div>
+              <div><strong id="hours">00</strong><span>Hours</span></div>
+              <div><strong id="minutes">00</strong><span>Minutes</span></div>
+              <div><strong id="seconds">00</strong><span>Seconds</span></div>
+            </div>
+          </header>
+
+          <figure class="couple-art">
+            <img src="public/assets/couple-illustration.png" alt="Illustration of a newlywed couple in traditional wedding attire" />
+          </figure>
+
+          <section class="photo-story" id="photoStory" hidden aria-label="Our photo story">
+            <p class="section-kicker">A few moments of us</p>
+            <div class="photo-grid" id="photoGrid"></div>
+          </section>
+
+          <section class="names-card">
+            <p class="host-line">With the blessings of our families</p>
+            <h2><span id="previewBrideCard">Mira</span> <small>with</small> <span id="previewGroomCard">Arjun</span></h2>
+            <p class="family-copy">Together with our loved ones, we request the honour of your presence as we begin our forever.</p>
+          </section>
+
+          <section class="blessing-section">
+            <p class="blessing" id="previewMessage">May Allah bless this union with love, peace, and understanding. May He shower His endless mercy upon them and make their journey together a source of happiness and Barakah. Ameen.</p>
+            <p class="arabic-blessing" id="arabicBlessing">بَارَكَ اللَّهُ لَكُمَا وَبَارَكَ عَلَيْكُمَا وَجَمَعَ بَيْنَكُمَا فِي خَيْرٍ</p>
+            <p class="quote" id="blessingQuote">“May Allah bless you, shower His blessings upon you, and bring you together in goodness.”</p>
+          </section>
+
+          <section class="events" aria-label="Wedding events">
+            <p class="section-kicker">Save our date</p>
+            <h2 class="section-title">Our celebrations</h2>
+
+            <article class="event-card">
+              <div class="event-number">01</div>
+              <div class="event-content">
+                <p class="event-type" id="primaryEventType">Nikah</p>
+                <h3 id="nikahDateTitle">Sunday, 14 February 2027</h3>
+                <div class="event-meta">
+                  <span>◷ <b id="nikahTime">5:00 P.M.</b></span>
+                  <span>⌖ <b id="nikahVenue">Willowbrook Auditorium (Demo Venue)</b></span>
+                </div>
+                <a class="map-button" id="nikahMap" href="https://maps.google.com/?q=Willowbrook+Auditorium+Demo+Venue" target="_blank" rel="noreferrer">Open in Maps <span>↗</span></a>
+              </div>
+            </article>
+
+            <article class="event-card event-card--reception">
+              <div class="event-number">02</div>
+              <div class="event-content">
+                <p class="event-type">Reception</p>
+                <h3 id="receptionDateTitle">Monday, 15 February 2027</h3>
+                <div class="event-meta">
+                  <span>◷ <b id="receptionTime">11:30 A.M. — 2:00 P.M.</b></span>
+                  <span>⌖ <b id="receptionVenue">Lakeside Celebration Hall (Demo Venue)</b></span>
+                </div>
+                <a class="map-button" id="receptionMap" href="https://maps.google.com/?q=Lakeside+Celebration+Hall+Demo+Venue" target="_blank" rel="noreferrer">Open in Maps <span>↗</span></a>
+              </div>
+            </article>
+          </section>
+
+          <footer class="invitation-footer">
+            <p id="previewHashtag">#MiraAndArjun</p>
+            <span>Made with love at Vow Atelier</span>
+            <p class="publish-status" id="publishStatus" aria-live="polite"></p>
+          </footer>
+        </article>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
