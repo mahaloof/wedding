@@ -1,4 +1,4 @@
-# Vow Atelier
+# Wedly
 
 A responsive, front-end prototype for an AI wedding invitation generator.
 
