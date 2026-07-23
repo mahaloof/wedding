@@ -74,7 +74,6 @@ button { cursor: pointer; }
 .preview-actions { display: flex; align-items: center; gap: 9px; }
 .edit-button { padding: 7px 10px; border: 1px solid #e4d5d3; border-radius: 99px; background: #fff; color: #956b5d; font-size: .68rem; font-weight: 700; }
 .publish-button { border-color: #ba8068; background: #ba8068; color: #fff; }
-.publish-price { color: #a8705e; font-size: .61rem; font-weight: 700; letter-spacing: .03em; }
 .brand { display: inline-flex; align-items: center; gap: 10px; color: #5e5656; font-size: .81rem; font-weight: 700; letter-spacing: .035em; text-decoration: none; }
 .brand-mark { width: 30px; height: 30px; display: grid; place-items: center; border: 1px solid #c99a87; border-radius: 50%; color: var(--rose-dark); font-family: "Playfair Display", serif; font-size: 1.05rem; }
 .preview-pill { display: inline-flex; align-items: center; gap: 7px; padding: 7px 10px; border-radius: 99px; background: #f0faf4; color: #4c7862; font-size: .7rem; font-weight: 700; }

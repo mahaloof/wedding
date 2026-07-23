@@ -76,25 +76,6 @@ async function authenticatedUser(req, url, key) {
   return response.json();
 }
 
-function isAdmin(user) {
-  const adminEmail = String(process.env.ADMIN_EMAIL || "").trim().toLowerCase();
-  return Boolean(adminEmail && user?.email?.toLowerCase() === adminEmail);
-}
-
-async function publishInvitation(data, user, url, key) {
-  if (!data?.bride || !data?.groom || !data?.nikahDate) throw httpError(400, "Names and the ceremony date are required before publishing.");
-  const slug = slugify(`${data.bride}-${data.groom}`);
-  const photos = await uploadPhotos(url, key, slug, data.photos);
-  const customMusic = await uploadMusic(url, key, slug, data.customMusic);
-  const invitation = { ...data, photos, customMusic };
-  await supabase(url, key, "/rest/v1/invitations", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Prefer: "return=minimal" },
-    body: JSON.stringify({ slug, data: invitation, owner_id: user.id }),
-  });
-  return { slug };
-}
-
 module.exports = async (req, res) => {
   try {
     const { url, key } = required();
@@ -109,16 +90,19 @@ module.exports = async (req, res) => {
 
     if (req.method !== "POST") return json(res, 405, { error: "Method not allowed." });
     const user = await authenticatedUser(req, url, key);
-    if (!isAdmin(user)) throw httpError(403, "Payment is required before publishing an invitation.");
     const data = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
-    return json(res, 201, await publishInvitation(data, user, url, key));
+    if (!data?.bride || !data?.groom || !data?.nikahDate) return json(res, 400, { error: "Names and the ceremony date are required before publishing." });
+    const slug = slugify(`${data.bride}-${data.groom}`);
+    const photos = await uploadPhotos(url, key, slug, data.photos);
+    const customMusic = await uploadMusic(url, key, slug, data.customMusic);
+    const invitation = { ...data, photos, customMusic };
+    await supabase(url, key, "/rest/v1/invitations", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Prefer: "return=minimal" },
+      body: JSON.stringify({ slug, data: invitation, owner_id: user.id }),
+    });
+    return json(res, 201, { slug });
   } catch (error) {
     return json(res, error.status || 500, { error: error.message || "Unable to publish this invitation." });
   }
 };
-
-module.exports.required = required;
-module.exports.authenticatedUser = authenticatedUser;
-module.exports.isAdmin = isAdmin;
-module.exports.publishInvitation = publishInvitation;
-module.exports.supabase = supabase;
