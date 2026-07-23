@@ -22,11 +22,27 @@ const photoUpload = $("photoUpload");
 const photoStory = $("photoStory");
 const photoGrid = $("photoGrid");
 const musicMood = $("musicMood");
+const customMusicUpload = $("customMusicUpload");
 const musicToggle = $("musicToggle");
 const publishButton = $("publishButton");
 const publishStatus = $("publishStatus");
 const publishDialog = $("publishDialog");
 const showShareLink = $("showShareLink");
+const authGate = $("authGate");
+const authForm = $("authForm");
+const authEmail = $("authEmail");
+const authPassword = $("authPassword");
+const authSubmit = $("authSubmit");
+const authSwitch = $("authSwitch");
+const authStatus = $("authStatus");
+const accountEmail = $("accountEmail");
+const logoutButton = $("logoutButton");
+const adminPanel = $("adminPanel");
+const adminList = $("adminList");
+const loadAdminInvitations = $("loadAdminInvitations");
+
+let authMode = "login";
+let activeSession;
 
 function titleDate(value) {
   if (!value) return "Your special date";
@@ -124,6 +140,8 @@ let audioContext;
 let musicTimer;
 let musicActive = false;
 let musicRun = 0;
+let customMusicUrl = "";
+const customMusicAudio = new Audio();
 const musicSettings = {
   piano: { notes: [261.63, 329.63, 392, 523.25], wave: "sine", gap: 1300, level: .055 },
   strings: { notes: [220, 293.66, 329.63, 440], wave: "triangle", gap: 1600, level: .045 },
@@ -135,10 +153,25 @@ function stopMusic() {
   clearInterval(musicTimer);
   musicTimer = undefined;
   musicActive = false;
+  customMusicAudio.pause();
+  customMusicAudio.currentTime = 0;
   musicToggle.textContent = "♪ Play music";
 }
 
 async function startMusic() {
+  if (customMusicUrl) {
+    if (musicActive) return;
+    customMusicAudio.src = customMusicUrl;
+    customMusicAudio.loop = true;
+    try {
+      await customMusicAudio.play();
+      musicActive = true;
+      musicToggle.textContent = "♫ Pause music";
+    } catch {
+      musicToggle.textContent = "♪ Play music";
+    }
+    return;
+  }
   const setting = musicSettings[musicMood.value];
   if (!setting || musicActive) return;
   const run = ++musicRun;
@@ -166,13 +199,28 @@ async function startMusic() {
 }
 
 function configureMusic() {
-  if (musicMood.value === "off") {
+  if (!customMusicUrl && musicMood.value === "off") {
     stopMusic();
     musicToggle.hidden = true;
     return;
   }
   musicToggle.hidden = false;
   startMusic();
+}
+
+function setCustomMusicUrl(url) {
+  if (customMusicUrl.startsWith("blob:")) URL.revokeObjectURL(customMusicUrl);
+  customMusicUrl = url || "";
+}
+
+function updateCustomMusic() {
+  const file = customMusicUpload.files?.[0];
+  if (file && file.size > 3_000_000) {
+    customMusicUpload.value = "";
+    $("formStatus").textContent = "Please choose a music file smaller than 3 MB.";
+    return;
+  }
+  setCustomMusicUrl(file ? URL.createObjectURL(file) : "");
 }
 
 function selectTemplate(template) {
@@ -192,6 +240,7 @@ $("invitationForm").addEventListener("submit", (event) => {
   event.preventDefault();
   updatePreview();
   updatePhotoStory();
+  updateCustomMusic();
   applyTemplate(templateInput.value);
   configureMusic();
   creatorScreen.hidden = true;
@@ -211,6 +260,8 @@ musicToggle.addEventListener("click", () => {
   else startMusic();
 });
 
+customMusicUpload.addEventListener("change", updateCustomMusic);
+
 function fileAsDataUrl(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -222,6 +273,7 @@ function fileAsDataUrl(file) {
 
 async function currentInvitationData() {
   const photos = await Promise.all(Array.from(photoUpload.files || []).slice(0, 4).map(fileAsDataUrl));
+  const customMusic = customMusicUpload.files?.[0] ? await fileAsDataUrl(customMusicUpload.files[0]) : "";
   return {
     template: templateInput.value,
     bride: fields.bride.value.trim(),
@@ -237,6 +289,7 @@ async function currentInvitationData() {
     receptionMap: mapInputs.reception.value.trim(),
     message: fields.message.value.trim(),
     musicMood: musicMood.value,
+    customMusic,
     photos,
   };
 }
@@ -248,7 +301,7 @@ async function publishInvitation() {
   try {
     const response = await fetch("/api/invitations", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...authHeaders() },
       body: JSON.stringify(await currentInvitationData()),
     });
     const result = await response.json();
@@ -279,6 +332,90 @@ showShareLink.addEventListener("click", () => {
   publishStatus.scrollIntoView({ behavior: "smooth", block: "center" });
 });
 
+function authHeaders() {
+  return activeSession?.access_token ? { Authorization: `Bearer ${activeSession.access_token}` } : {};
+}
+
+function setAuthMode(mode) {
+  authMode = mode;
+  authSubmit.textContent = mode === "login" ? "Log in to Wedly" : "Create my Wedly account";
+  authSwitch.textContent = mode === "login" ? "New here? Create an account" : "Already have an account? Log in";
+  authPassword.autocomplete = mode === "login" ? "current-password" : "new-password";
+  authStatus.textContent = "";
+}
+
+async function loadAdminOverview() {
+  const response = await fetch("/api/admin/invitations", { headers: authHeaders() });
+  const result = await response.json();
+  if (!response.ok) throw new Error(result.error || "Unable to load invitations.");
+  adminList.replaceChildren();
+  result.invitations.forEach((item) => {
+    const row = document.createElement("div");
+    row.className = "admin-item";
+    const details = document.createElement("span");
+    details.textContent = `${item.data?.bride || "Couple"} & ${item.data?.groom || ""} · ${new Date(item.created_at).toLocaleDateString()}`;
+    const link = document.createElement("a");
+    link.href = `/invite/${item.slug}`;
+    link.textContent = "Open invitation";
+    link.target = "_blank";
+    link.rel = "noreferrer";
+    row.append(details, link);
+    adminList.append(row);
+  });
+  if (!result.invitations.length) adminList.textContent = "No invitations have been published yet.";
+}
+
+async function enterWedly(session) {
+  activeSession = session;
+  localStorage.setItem("wedly-session", JSON.stringify(session));
+  const response = await fetch("/api/auth", { headers: authHeaders() });
+  const result = await response.json();
+  if (!response.ok) throw new Error(result.error || "Your session has expired. Please log in again.");
+  accountEmail.textContent = result.user.email;
+  authGate.hidden = true;
+  creatorScreen.hidden = false;
+  adminPanel.hidden = !result.isAdmin;
+  if (result.isAdmin) loadAdminOverview().catch(() => { adminList.textContent = "Unable to load invitations right now."; });
+}
+
+authSwitch.addEventListener("click", () => setAuthMode(authMode === "login" ? "signup" : "login"));
+
+authForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  authSubmit.disabled = true;
+  authStatus.textContent = authMode === "login" ? "Logging you in…" : "Creating your account…";
+  try {
+    const response = await fetch("/api/auth", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: authMode, email: authEmail.value.trim(), password: authPassword.value }),
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error || "Unable to continue.");
+    if (result.needsConfirmation) {
+      authStatus.textContent = "Check your email to confirm your account, then return here to log in.";
+      setAuthMode("login");
+      return;
+    }
+    await enterWedly(result.session);
+  } catch (error) {
+    authStatus.textContent = error.message;
+  } finally {
+    authSubmit.disabled = false;
+  }
+});
+
+logoutButton.addEventListener("click", () => {
+  localStorage.removeItem("wedly-session");
+  activeSession = undefined;
+  location.reload();
+});
+
+loadAdminInvitations.addEventListener("click", () => {
+  loadAdminInvitations.disabled = true;
+  loadAdminOverview().catch((error) => { adminList.textContent = error.message; }).finally(() => { loadAdminInvitations.disabled = false; });
+});
+
 function setFieldValues(data) {
   const values = {
     bride: data.bride, groom: data.groom, hashtag: data.hashtag,
@@ -290,6 +427,7 @@ function setFieldValues(data) {
   mapInputs.nikah.value = data.nikahMap || "";
   mapInputs.reception.value = data.receptionMap || "";
   musicMood.value = data.musicMood || "off";
+  setCustomMusicUrl(data.customMusic || "");
   selectTemplate(data.template || "blush");
   updatePreview();
   applyTemplate(templateInput.value);
@@ -306,7 +444,7 @@ async function loadPublishedInvitation(slug) {
     invitationStage.hidden = false;
     $("editInvitation").hidden = true;
     publishButton.hidden = true;
-    musicToggle.hidden = musicMood.value === "off";
+    musicToggle.hidden = musicMood.value === "off" && !customMusicUrl;
     musicToggle.textContent = "♪ Play music";
   } catch (error) {
     publishStatus.textContent = error.message;
@@ -336,4 +474,14 @@ selectTemplate(templateInput.value);
 
 const pathSlug = window.location.pathname.match(/^\/invite\/([^/]+)\/?$/)?.[1];
 const publicSlug = new URLSearchParams(window.location.search).get("invite") || pathSlug;
-if (publicSlug) loadPublishedInvitation(publicSlug);
+if (publicSlug) {
+  authGate.hidden = true;
+  loadPublishedInvitation(publicSlug);
+} else {
+  try {
+    const savedSession = JSON.parse(localStorage.getItem("wedly-session") || "null");
+    if (savedSession?.access_token) enterWedly(savedSession).catch(() => localStorage.removeItem("wedly-session"));
+  } catch {
+    localStorage.removeItem("wedly-session");
+  }
+}

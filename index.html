@@ -11,10 +11,26 @@
     <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
-    <section class="creator-screen" id="creatorScreen" aria-labelledby="creatorTitle">
+    <section class="auth-gate" id="authGate" aria-labelledby="authTitle">
+      <div class="auth-card">
+        <a class="brand" href="#" aria-label="Wedly home"><span class="brand-mark">W</span><span>Wedly</span></a>
+        <p class="panel-kicker">Your wedding, your website</p>
+        <h1 id="authTitle">Create invitations<br /><em>worth keeping.</em></h1>
+        <p class="auth-copy">Create an account or log in to design, publish, and manage your wedding invitation websites.</p>
+        <form id="authForm">
+          <label>Email<input id="authEmail" type="email" autocomplete="email" required placeholder="you@example.com" /></label>
+          <label>Password<input id="authPassword" type="password" autocomplete="current-password" required minlength="8" placeholder="At least 8 characters" /></label>
+          <button class="generate-button" id="authSubmit" type="submit">Log in to Wedly</button>
+          <button class="auth-switch" id="authSwitch" type="button">New here? Create an account</button>
+          <p class="form-status" id="authStatus" aria-live="polite"></p>
+        </form>
+      </div>
+    </section>
+
+    <section class="creator-screen" id="creatorScreen" aria-labelledby="creatorTitle" hidden>
       <nav class="creator-nav">
         <a class="brand" href="#creatorTitle" aria-label="Wedly home"><span class="brand-mark">W</span><span>Wedly</span></a>
-        <span class="creator-nav-note">Made for your forever</span>
+        <div class="account-actions"><span class="creator-nav-note" id="accountEmail">Made for your forever</span><button class="logout-button" id="logoutButton" type="button">Log out</button></div>
       </nav>
 
       <div class="creator-intro">
@@ -89,7 +105,8 @@
           <fieldset>
             <legend>Background music</legend>
             <label>Choose an ambient tone<select id="musicMood" name="musicMood"><option value="off">No background music</option><option value="piano">Soft piano glow</option><option value="strings">Warm strings</option><option value="bells">Dreamy bells</option></select></label>
-            <p class="field-help">Guests can pause or play it from the invitation header.</p>
+            <label class="upload-label">Or add your own music <span class="optional">MP3, WAV, M4A — max 3 MB</span><input id="customMusicUpload" name="customMusic" type="file" accept="audio/*" /></label>
+            <p class="field-help">Your own track takes priority over the ambient tone. Guests can pause or play it from the invitation header.</p>
           </fieldset>
 
           <fieldset>
@@ -100,6 +117,14 @@
           <button class="generate-button" type="submit"><span>✦</span> Create my invitation</button>
           <p class="form-status" id="formStatus" aria-live="polite"></p>
         </form>
+      </section>
+
+      <section class="admin-panel" id="adminPanel" hidden aria-labelledby="adminTitle">
+        <p class="panel-kicker">Administrator</p>
+        <h2 id="adminTitle">Published invitations</h2>
+        <p>Only the configured administrator can see this overview.</p>
+        <button class="demo-fill" id="loadAdminInvitations" type="button">Refresh invitations</button>
+        <div class="admin-list" id="adminList"></div>
       </section>
     </section>
 

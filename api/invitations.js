@@ -1,6 +1,7 @@
 const crypto = require("crypto");
 
 const json = (res, status, body) => res.status(status).json(body);
+const httpError = (status, message) => Object.assign(new Error(message), { status });
 const required = () => {
   const url = process.env.SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -16,6 +17,12 @@ function slugify(value) {
 function decodeImage(dataUrl) {
   const match = /^data:(image\/[\w.+-]+);base64,(.+)$/.exec(dataUrl || "");
   if (!match) throw new Error("One of the uploaded photos is not a supported image.");
+  return { contentType: match[1], bytes: Buffer.from(match[2], "base64") };
+}
+
+function decodeAudio(dataUrl) {
+  const match = /^data:(audio\/[\w.+-]+);base64,(.+)$/.exec(dataUrl || "");
+  if (!match) throw httpError(400, "Your music file must be a supported audio file.");
   return { contentType: match[1], bytes: Buffer.from(match[2], "base64") };
 }
 
@@ -45,6 +52,30 @@ async function uploadPhotos(url, key, slug, photos = []) {
   return uploaded;
 }
 
+async function uploadMusic(url, key, slug, musicData) {
+  if (!musicData) return "";
+  const audio = decodeAudio(musicData);
+  if (audio.bytes.length > 3_000_000) throw httpError(400, "Your music file must be smaller than 3 MB before publishing.");
+  const extension = audio.contentType.split("/")[1].replace("mpeg", "mp3").replace("x-wav", "wav");
+  const path = `${slug}/background.${extension}`;
+  await supabase(url, key, `/storage/v1/object/invitation-music/${path}`, {
+    method: "POST",
+    headers: { "Content-Type": audio.contentType, "x-upsert": "true" },
+    body: audio.bytes,
+  });
+  return `${url}/storage/v1/object/public/invitation-music/${path}`;
+}
+
+async function authenticatedUser(req, url, key) {
+  const token = String(req.headers.authorization || "").replace(/^Bearer\s+/i, "").trim();
+  if (!token) throw httpError(401, "Please log in before publishing an invitation.");
+  const response = await fetch(`${url}/auth/v1/user`, {
+    headers: { apikey: key, Authorization: `Bearer ${token}` },
+  });
+  if (!response.ok) throw httpError(401, "Your session has expired. Please log in again.");
+  return response.json();
+}
+
 module.exports = async (req, res) => {
   try {
     const { url, key } = required();
@@ -58,18 +89,20 @@ module.exports = async (req, res) => {
     }
 
     if (req.method !== "POST") return json(res, 405, { error: "Method not allowed." });
+    const user = await authenticatedUser(req, url, key);
     const data = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
     if (!data?.bride || !data?.groom || !data?.nikahDate) return json(res, 400, { error: "Names and the ceremony date are required before publishing." });
     const slug = slugify(`${data.bride}-${data.groom}`);
     const photos = await uploadPhotos(url, key, slug, data.photos);
-    const invitation = { ...data, photos };
+    const customMusic = await uploadMusic(url, key, slug, data.customMusic);
+    const invitation = { ...data, photos, customMusic };
     await supabase(url, key, "/rest/v1/invitations", {
       method: "POST",
       headers: { "Content-Type": "application/json", Prefer: "return=minimal" },
-      body: JSON.stringify({ slug, data: invitation }),
+      body: JSON.stringify({ slug, data: invitation, owner_id: user.id }),
     });
     return json(res, 201, { slug });
   } catch (error) {
-    return json(res, 500, { error: error.message || "Unable to publish this invitation." });
+    return json(res, error.status || 500, { error: error.message || "Unable to publish this invitation." });
   }
 };
