@@ -326,5 +326,6 @@ $("demoFill").addEventListener("click", () => {
 
 selectTemplate(templateInput.value);
 
-const publicSlug = new URLSearchParams(window.location.search).get("invite");
+const pathSlug = window.location.pathname.match(/^\/invite\/([^/]+)\/?$/)?.[1];
+const publicSlug = new URLSearchParams(window.location.search).get("invite") || pathSlug;
 if (publicSlug) loadPublishedInvitation(publicSlug);

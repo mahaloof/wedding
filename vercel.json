@@ -4,6 +4,6 @@
   "buildCommand": null,
   "outputDirectory": ".",
   "rewrites": [
-    { "source": "/invite/(.*)", "destination": "/index.html?invite=$1" }
+    { "source": "/invite/:slug", "destination": "/index.html?invite=:slug" }
   ]
 }
