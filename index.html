@@ -86,7 +86,12 @@
             <label>Google Maps link <span class="optional">optional</span><input id="nikahMapInput" name="nikahMap" type="url" placeholder="https://maps.google.com/..." /></label>
           </fieldset>
 
-          <fieldset>
+          <fieldset class="reception-choice">
+            <label class="event-toggle"><input id="includeReception" name="includeReception" type="checkbox" checked /> <span>Include a reception event</span></label>
+            <p class="field-help">Turn this off if you only want to share the main ceremony.</p>
+          </fieldset>
+
+          <fieldset id="receptionFields">
             <legend>Reception</legend>
             <label>Date<input id="receptionDate" name="receptionDate" type="date" value="2027-02-15" /></label>
             <div class="two-columns">
@@ -195,7 +200,7 @@
               </div>
             </article>
 
-            <article class="event-card event-card--reception">
+            <article class="event-card event-card--reception" id="receptionEvent">
               <div class="event-number">02</div>
               <div class="event-content">
                 <p class="event-type">Reception</p>

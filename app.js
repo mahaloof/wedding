@@ -18,6 +18,9 @@ const invitation = document.querySelector(".invitation");
 const creatorScreen = $("creatorScreen");
 const invitationStage = $("invitationStage");
 const mapInputs = { nikah: $("nikahMapInput"), reception: $("receptionMapInput") };
+const includeReception = $("includeReception");
+const receptionFields = $("receptionFields");
+const receptionEvent = $("receptionEvent");
 const photoUpload = $("photoUpload");
 const photoStory = $("photoStory");
 const photoGrid = $("photoGrid");
@@ -61,6 +64,28 @@ function preferredMapUrl(input, venue) {
   return value || mapUrl(venue || "Wedding venue");
 }
 
+function fitCoupleNames(bride, groom) {
+  const heading = $("previewBride").parentElement;
+  const cardHeading = $("previewBrideCard").parentElement;
+  const longestName = Math.max(bride.length, groom.length);
+  const combinedLength = bride.length + groom.length;
+  const scale = longestName > 28 ? .52 : longestName > 20 ? .65 : longestName > 15 || combinedLength > 26 ? .78 : 1;
+  heading.style.setProperty("--name-min-size", `${3.35 * scale}rem`);
+  heading.style.setProperty("--name-fluid-size", `${10 * scale}vw`);
+  heading.style.setProperty("--name-max-size", `${6.2 * scale}rem`);
+  heading.classList.toggle("long-names", longestName > 16 || combinedLength > 28);
+  cardHeading.style.setProperty("--card-name-min-size", `${3 * scale}rem`);
+  cardHeading.style.setProperty("--card-name-fluid-size", `${8 * scale}vw`);
+  cardHeading.style.setProperty("--card-name-max-size", `${4.2 * scale}rem`);
+  cardHeading.classList.toggle("long-names", longestName > 16 || combinedLength > 28);
+}
+
+function syncReception() {
+  const enabled = includeReception.checked;
+  receptionFields.hidden = !enabled;
+  receptionEvent.hidden = !enabled;
+}
+
 function updatePreview() {
   const bride = fields.bride.value.trim() || "Bride";
   const groom = fields.groom.value.trim() || "Groom";
@@ -70,6 +95,7 @@ function updatePreview() {
 
   $("previewBride").textContent = bride;
   $("previewGroom").textContent = groom;
+  fitCoupleNames(bride, groom);
   $("previewBrideCard").textContent = bride;
   $("previewGroomCard").textContent = groom;
   $("previewDateLine").textContent = nikahDate;
@@ -88,6 +114,7 @@ function updatePreview() {
   $("receptionTime").textContent = fields.receptionTime.value.trim() || "To be announced";
   $("receptionVenue").textContent = fields.receptionVenue.value.trim() || "Venue to be announced";
   $("receptionMap").href = preferredMapUrl(mapInputs.reception, fields.receptionVenue.value);
+  syncReception();
   startCountdown(fields.nikahDate.value);
 }
 
@@ -236,6 +263,8 @@ document.querySelectorAll("[data-template]").forEach((card) => {
   card.addEventListener("click", () => selectTemplate(card.dataset.template));
 });
 
+includeReception.addEventListener("change", syncReception);
+
 $("invitationForm").addEventListener("submit", (event) => {
   event.preventDefault();
   updatePreview();
@@ -287,6 +316,7 @@ async function currentInvitationData() {
     receptionTime: fields.receptionTime.value.trim(),
     receptionVenue: fields.receptionVenue.value.trim(),
     receptionMap: mapInputs.reception.value.trim(),
+    hasReception: includeReception.checked,
     message: fields.message.value.trim(),
     musicMood: musicMood.value,
     customMusic,
@@ -427,6 +457,8 @@ function setFieldValues(data) {
   mapInputs.nikah.value = data.nikahMap || "";
   mapInputs.reception.value = data.receptionMap || "";
   musicMood.value = data.musicMood || "off";
+  includeReception.checked = data.hasReception !== false;
+  syncReception();
   setCustomMusicUrl(data.customMusic || "");
   selectTemplate(data.template || "blush");
   updatePreview();
