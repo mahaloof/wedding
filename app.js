@@ -178,7 +178,7 @@ function applyTemplate(template) {
   const coupleImage = $("coupleImage");
   const useSealedImage = template === "sealed";
   coupleImage.src = useSealedImage
-    ? "/public/assets/sealed-promise-couple.png"
+    ? "/public/assets/sealed-promise-couple-v2.png"
     : "/public/assets/couple-illustration.png";
   coupleImage.alt = useSealedImage
     ? "Bride and groom holding frames in pastel Indian engagement outfits"
