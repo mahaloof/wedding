@@ -175,6 +175,14 @@ function startCountdown(dateValue) {
 function applyTemplate(template) {
   invitation.classList.remove("template-blush", "template-classic", "template-midnight", "template-botanical", "template-sealed");
   invitation.classList.add(`template-${template}`);
+  const coupleImage = $("coupleImage");
+  const useSealedImage = template === "sealed";
+  coupleImage.src = useSealedImage
+    ? "/public/assets/sealed-promise-couple.png"
+    : "/public/assets/couple-illustration.png";
+  coupleImage.alt = useSealedImage
+    ? "Bride and groom holding frames in pastel Indian engagement outfits"
+    : "Illustration of a newlywed couple in traditional wedding attire";
 }
 
 let storyObserver;
