@@ -17,6 +17,8 @@ const templateInput = $("selectedTemplate");
 const invitation = document.querySelector(".invitation");
 const creatorScreen = $("creatorScreen");
 const invitationStage = $("invitationStage");
+const storyCover = $("storyCover");
+const openStoryButton = $("openStoryButton");
 const mapInputs = { nikah: $("nikahMapInput"), reception: $("receptionMapInput") };
 const includeReception = $("includeReception");
 const receptionFields = $("receptionFields");
@@ -99,6 +101,14 @@ function updatePreview() {
   $("previewBrideCard").textContent = bride;
   $("previewGroomCard").textContent = groom;
   $("previewDateLine").textContent = nikahDate;
+  $("closingDate").textContent = nikahDate;
+  $("coverDate").textContent = fields.nikahDate.value
+    ? fields.nikahDate.value.split("-").reverse().join(" · ")
+    : "Save the date";
+  $("coverVenue").textContent = fields.nikahVenue.value.trim() || "Venue to be announced";
+  $("coverBride").textContent = bride;
+  $("coverGroom").textContent = groom;
+  $("coverMonogram").textContent = `${bride.charAt(0)} ${groom.charAt(0)}`.toUpperCase();
   $("previewHashtag").textContent = fields.hashtag.value.trim() || `#${bride}And${groom}`;
   $("previewMessage").textContent = fields.message.value.trim() || "With love in our hearts, we invite you to celebrate this beautiful beginning with us.";
   $("occasionLabel").textContent = isNikah ? "The Nikah of" : "Together with their families";
@@ -110,6 +120,10 @@ function updatePreview() {
   $("nikahTime").textContent = fields.nikahTime.value.trim() || "To be announced";
   $("nikahVenue").textContent = fields.nikahVenue.value.trim() || "Venue to be announced";
   $("nikahMap").href = preferredMapUrl(mapInputs.nikah, fields.nikahVenue.value);
+  $("sealedVenueTitle").textContent = fields.nikahVenue.value.trim() || "Venue to be announced";
+  $("sealedVenueAddress").textContent = fields.nikahTime.value.trim() ? `Ceremony · ${fields.nikahTime.value.trim()}` : "Ceremony details to follow";
+  $("sealedVenueMap").href = preferredMapUrl(mapInputs.nikah, fields.nikahVenue.value);
+  $("closingMap").href = preferredMapUrl(mapInputs.nikah, fields.nikahVenue.value);
   $("receptionDateTitle").textContent = receptionDate;
   $("receptionTime").textContent = fields.receptionTime.value.trim() || "To be announced";
   $("receptionVenue").textContent = fields.receptionVenue.value.trim() || "Venue to be announced";
@@ -159,9 +173,48 @@ function startCountdown(dateValue) {
 }
 
 function applyTemplate(template) {
-  invitation.classList.remove("template-blush", "template-classic", "template-midnight", "template-botanical");
+  invitation.classList.remove("template-blush", "template-classic", "template-midnight", "template-botanical", "template-sealed");
   invitation.classList.add(`template-${template}`);
 }
+
+let storyObserver;
+function revealStorySections() {
+  storyObserver?.disconnect();
+  const sections = invitation.querySelectorAll(".hero, .couple-art, .photo-story, .names-card, .blessing-section, .events, .sealed-venue, .sealed-closing, .invitation-footer");
+  if (templateInput.value !== "sealed" || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    sections.forEach((section) => section.classList.add("is-visible"));
+    return;
+  }
+  sections.forEach((section) => section.classList.remove("is-visible"));
+  storyObserver = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (!entry.isIntersecting) return;
+      entry.target.classList.add("is-visible");
+      storyObserver.unobserve(entry.target);
+    });
+  }, { threshold: 0.16 });
+  sections.forEach((section) => storyObserver.observe(section));
+}
+
+function prepareStoryCover() {
+  const isSealed = templateInput.value === "sealed";
+  storyCover.hidden = !isSealed;
+  invitationStage.classList.toggle("has-story-cover", isSealed);
+  document.body.classList.toggle("story-cover-active", isSealed);
+  if (!isSealed) {
+    revealStorySections();
+    return;
+  }
+  storyCover.classList.remove("is-opening", "is-ready");
+  requestAnimationFrame(() => storyCover.classList.add("is-ready"));
+}
+
+openStoryButton.addEventListener("click", () => {
+  storyCover.classList.add("is-opening");
+  document.body.classList.remove("story-cover-active");
+  revealStorySections();
+  window.setTimeout(() => { storyCover.hidden = true; }, 700);
+});
 
 let audioContext;
 let musicTimer;
@@ -271,6 +324,7 @@ $("invitationForm").addEventListener("submit", (event) => {
   updatePhotoStory();
   updateCustomMusic();
   applyTemplate(templateInput.value);
+  prepareStoryCover();
   configureMusic();
   creatorScreen.hidden = true;
   invitationStage.hidden = false;
@@ -282,6 +336,8 @@ $("editInvitation").addEventListener("click", () => {
   invitationStage.hidden = true;
   creatorScreen.hidden = false;
   window.scrollTo({ top: 0, behavior: "smooth" });
+  document.body.classList.remove("story-cover-active");
+  storyCover.hidden = true;
 });
 
 musicToggle.addEventListener("click", () => {
@@ -474,6 +530,7 @@ async function loadPublishedInvitation(slug) {
     setFieldValues(result.invitation);
     creatorScreen.hidden = true;
     invitationStage.hidden = false;
+    prepareStoryCover();
     $("editInvitation").hidden = true;
     publishButton.hidden = true;
     musicToggle.hidden = musicMood.value === "off" && !customMusicUrl;

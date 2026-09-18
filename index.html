@@ -40,7 +40,7 @@
       </div>
 
       <section class="template-picker" aria-labelledby="templateTitle">
-        <div class="picker-heading"><p class="step-label">01</p><h2 id="templateTitle">Pick your invitation style</h2><span>4 templates</span></div>
+        <div class="picker-heading"><p class="step-label">01</p><h2 id="templateTitle">Pick your invitation style</h2><span>5 templates</span></div>
         <div class="template-grid" role="list">
           <button class="template-card is-selected" type="button" data-template="blush" aria-pressed="true" role="listitem">
             <span class="template-art template-art--blush"><i>the nikah of</i><b>A &amp; N</b><small>soft blush</small></span>
@@ -57,6 +57,10 @@
           <button class="template-card" type="button" data-template="botanical" aria-pressed="false" role="listitem">
             <span class="template-art template-art--botanical"><i>in bloom</i><b>M &amp; A</b><small>floral</small></span>
             <strong>Botanical Story</strong><small>Watercolour, floral &amp; fresh</small>
+          </button>
+          <button class="template-card" type="button" data-template="sealed" aria-pressed="false" role="listitem">
+            <span class="template-art template-art--sealed"><i>sealed with</i><b>M &amp; A</b><small>love</small><span class="template-wax">M A</span></span>
+            <strong>Sealed Promise</strong><small>Animated cover &amp; editorial story</small>
           </button>
         </div>
       </section>
@@ -134,6 +138,20 @@
     </section>
 
     <main class="app-shell invitation-stage" id="invitationStage" hidden aria-label="Generated invitation">
+      <aside class="story-cover" id="storyCover" hidden aria-label="Invitation opening cover">
+        <div class="story-cover__paper">
+          <div class="cover-ornament cover-ornament--top" aria-hidden="true">✦</div>
+          <p class="cover-label cover-reveal">Save the date</p>
+          <p class="cover-date cover-reveal" id="coverDate">14 · 02 · 27</p>
+          <p class="cover-venue cover-reveal" id="coverVenue">Willowbrook Auditorium</p>
+          <div class="cover-divider cover-reveal" aria-hidden="true"><span></span></div>
+          <h2 class="cover-names cover-reveal"><span id="coverBride">Mira</span><em>&amp;</em><span id="coverGroom">Arjun</span></h2>
+          <div class="wax-seal cover-reveal" aria-label="Couple monogram"><span id="coverMonogram">M A</span></div>
+          <p class="cover-note cover-reveal">A celebration of love, thoughtfully sealed for you</p>
+          <button class="open-story-button cover-reveal" id="openStoryButton" type="button"><span>Open invitation</span><i>↓</i></button>
+          <div class="cover-ornament cover-ornament--bottom" aria-hidden="true">✦</div>
+        </div>
+      </aside>
       <section class="preview-area" aria-label="Invitation preview">
         <div class="preview-toolbar">
           <a class="brand" href="#top" aria-label="Wedly home">
@@ -212,6 +230,21 @@
                 <a class="map-button" id="receptionMap" href="https://maps.google.com/?q=Lakeside+Celebration+Hall+Demo+Venue" target="_blank" rel="noreferrer">Open in Maps <span>↗</span></a>
               </div>
             </article>
+          </section>
+
+          <section class="sealed-venue story-reveal" aria-label="Venue information">
+            <p class="section-kicker">Where to find us</p>
+            <h2 id="sealedVenueTitle">Willowbrook Auditorium</h2>
+            <p id="sealedVenueAddress">The wedding venue</p>
+            <a class="sealed-map" id="sealedVenueMap" href="#" target="_blank" rel="noreferrer" aria-label="Open ceremony venue in Maps"><span class="map-lines" aria-hidden="true"></span><span class="map-pin">⌖</span><span class="map-caption">Open in Maps ↗</span></a>
+            <div class="sealed-pills" aria-hidden="true"><span></span><span></span><span></span></div>
+          </section>
+
+          <section class="sealed-closing story-reveal">
+            <p class="section-kicker">With love, always</p>
+            <p class="sealed-closing__date" id="closingDate">Sunday, 14 February 2027</p>
+            <p class="sealed-closing__message">We cannot wait to celebrate this beautiful beginning with you.</p>
+            <div class="sealed-actions"><a href="#top">Our story</a><a id="closingMap" href="#" target="_blank" rel="noreferrer">Venue</a><a href="#previewHashtag">Save date</a></div>
           </section>
 
           <footer class="invitation-footer">
